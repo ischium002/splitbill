@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f7f1e6;
+  --card: #fffdf8;
+  --card2: #f0e7d6;
+  --text: #241f19;
+  --sub: #8d8271;
+  --line: #e2d7c3;
+  --accent: #c4703a;
+  --accent-soft: #f3dcc9;
+  --pos: #5f7d4a;
+  --pos-soft: #e6ecd9;
+  --neg: #c0492f;
+  --neg-soft: #f7ded5;
+}
+
+/* 跟随系统的深色（手动选了浅色时不生效） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1c1915;
+    --card: #272219;
+    --card2: #322b20;
+    --text: #f2ead9;
+    --sub: #9a8f7c;
+    --line: #3a332a;
+    --accent: #d98f57;
+    --accent-soft: #46331f;
+    --pos: #a3bd7f;
+    --pos-soft: #2c3320;
+    --neg: #e57a5c;
+    --neg-soft: #40261e;
+  }
+}
+
+/* 手动指定深色 */
+:root[data-theme='dark'] {
+  --bg: #1c1915;
+  --card: #272219;
+  --card2: #322b20;
+  --text: #f2ead9;
+  --sub: #9a8f7c;
+  --line: #3a332a;
+  --accent: #d98f57;
+  --accent-soft: #46331f;
+  --pos: #a3bd7f;
+  --pos-soft: #2c3320;
+  --neg: #e57a5c;
+  --neg-soft: #40261e;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card2: var(--card2);
+  --color-ink: var(--text);
+  --color-sub: var(--sub);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+}
+
+/* 自定义重置必须进 @layer base：无 layer 的规则会压过 Tailwind 的所有工具类 */
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  button {
+    font-family: inherit;
+    text-align: inherit;
+    cursor: pointer;
+  }
+
+  input {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  input:focus {
+    outline: none;
+  }
+}
+
+/* 金额统一等宽数字，小数点对齐 */
+.num {
+  font-variant-numeric: tabular-nums;
+}
