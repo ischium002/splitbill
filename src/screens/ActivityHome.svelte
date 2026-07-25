@@ -10,12 +10,27 @@
   let { activity }: { activity: Activity } = $props()
 
   let menuOpen = $state(false)
+  let renaming = $state(false)
 
   const total = $derived(fundTotal(activity))
   const spent = $derived(activitySpent(activity))
   const remain = $derived(total - spent)
   const pct = $derived(total > 0 ? Math.min(100, (spent / total) * 100) : 0)
   const shares = $derived(activityShares(activity))
+
+  function focusSelect(node: HTMLInputElement) {
+    node.focus()
+    node.select()
+  }
+
+  function commitRename(e: Event) {
+    const v = (e.currentTarget as HTMLInputElement).value.trim()
+    if (v && v !== activity.name) {
+      activity.name = v
+      persist(activity)
+    }
+    renaming = false
+  }
 
   function toggleSettled() {
     menuOpen = false
@@ -34,9 +49,23 @@
 
 <div class="relative flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
   <div class="flex items-start justify-between px-6 pt-3.5">
-    <div>
+    <div class="min-w-0 flex-1 pr-3">
       <button class="text-[15px] font-semibold text-accent" onclick={() => nav('')}>‹ 活动</button>
-      <div class="mt-1 text-2xl font-extrabold">{activity.name}</div>
+      {#if renaming}
+        <input
+          class="mt-1 w-full bg-transparent text-2xl font-extrabold"
+          value={activity.name}
+          use:focusSelect
+          onblur={commitRename}
+          onkeydown={(e) => {
+            if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur()
+          }}
+        />
+      {:else}
+        <button class="mt-1 block text-2xl font-extrabold" onclick={() => (renaming = true)}>
+          {activity.name}
+        </button>
+      {/if}
       <div class="mt-[3px] text-[13px] text-sub">
         {fmtRange(activity.startDate, activity.endDate)}
         {activity.startDate ? ' · ' : ''}{activity.members.length} 人{activity.settled
@@ -62,6 +91,13 @@
     >
       <button
         class="px-4 py-3.5 text-left text-[15px] font-semibold"
+        onclick={() => {
+          menuOpen = false
+          renaming = true
+        }}>重命名</button
+      >
+      <button
+        class="border-t border-line px-4 py-3.5 text-left text-[15px] font-semibold"
         onclick={() => {
           menuOpen = false
           nav('settings')

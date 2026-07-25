@@ -3,6 +3,7 @@
   import { addActivity } from '../lib/store.svelte'
   import { parseAmount, fmt, sym } from '../lib/money'
   import { memberColor, initialOf } from '../lib/members'
+  import { uid } from '../lib/id'
   import Avatar from '../lib/Avatar.svelte'
   import type { Activity, Member } from '../lib/types'
 
@@ -62,12 +63,12 @@
       return
     }
     const act: Activity = {
-      id: crypto.randomUUID(),
+      id: uid(),
       name: name.trim(),
       startDate,
       endDate,
       members: names.map((n, i) => ({
-        id: crypto.randomUUID(),
+        id: uid(),
         name: n,
         ini: initialOf(n),
         color: memberColor(i),

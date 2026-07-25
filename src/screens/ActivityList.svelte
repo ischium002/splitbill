@@ -1,10 +1,22 @@
 <script lang="ts">
-  import { store } from '../lib/store.svelte'
+  import { store, removeActivity } from '../lib/store.svelte'
   import { nav } from '../lib/router.svelte'
   import { fmt, fmtPlain, sym } from '../lib/money'
   import { fundTotal, activitySpent } from '../lib/calc'
   import { fmtRange } from '../lib/dates'
   import Avatar from '../lib/Avatar.svelte'
+  import SwipeRow from '../lib/SwipeRow.svelte'
+  import type { Activity } from '../lib/types'
+
+  // 同一时间只允许一张卡片滑开
+  let swipeOpenId = $state<string | null>(null)
+
+  function del(a: Activity) {
+    if (confirm(`删除「${a.name}」？所有账单记录会一起删掉，删了就没了。`)) {
+      removeActivity(a.id)
+    }
+    swipeOpenId = null
+  }
 </script>
 
 <div class="flex flex-1 flex-col px-6 pt-[max(env(safe-area-inset-top),20px)] pb-8">
@@ -29,9 +41,17 @@
       {@const spent = activitySpent(a)}
       {@const remain = total - spent}
       {@const pct = total > 0 ? Math.min(100, (spent / total) * 100) : 0}
+      <SwipeRow
+        open={swipeOpenId === a.id}
+        onOpenChange={(v) => {
+          if (v) swipeOpenId = a.id
+          else if (swipeOpenId === a.id) swipeOpenId = null
+        }}
+        onDelete={() => del(a)}
+      >
       {#if !a.settled}
         <button
-          class="flex flex-col gap-3.5 rounded-3xl border border-line bg-card p-5 shadow-[0_4px_16px_rgba(45,32,14,.06)]"
+          class="flex w-full flex-col gap-3.5 rounded-3xl border border-line bg-card p-5 shadow-[0_4px_16px_rgba(45,32,14,.06)]"
           onclick={() => nav('a/' + a.id)}
         >
           <div class="flex items-start justify-between self-stretch">
@@ -62,7 +82,7 @@
         </button>
       {:else}
         <button
-          class="flex flex-col gap-3 rounded-3xl border border-line bg-card p-5 opacity-70"
+          class="flex w-full flex-col gap-3 rounded-3xl border border-line bg-card p-5 opacity-70"
           onclick={() => nav('a/' + a.id)}
         >
           <div class="flex items-start justify-between self-stretch">
@@ -78,6 +98,7 @@
           </div>
         </button>
       {/if}
+      </SwipeRow>
     {/each}
 
     {#if store.activities.length === 0}

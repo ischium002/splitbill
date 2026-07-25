@@ -3,6 +3,7 @@
   import { persist } from '../lib/store.svelte'
   import { fmt, sym, parseAmount, centsToInput } from '../lib/money'
   import { today, fmtDay } from '../lib/dates'
+  import { uid } from '../lib/id'
   import Avatar from '../lib/Avatar.svelte'
   import type { Activity, Bill, BillItem, ItemKind } from '../lib/types'
 
@@ -22,6 +23,17 @@
   let cAmount = $state('')
   let cKind = $state<ItemKind>('shared')
   let cSel = $state<string[]>(activity.members.map((m) => m.id))
+  let composerEl = $state<HTMLElement>()
+
+  /** 挂在按钮的 pointerdown 上：不抢输入框的焦点，键盘就不会收起（click 照常触发） */
+  function keepFocus(e: PointerEvent) {
+    e.preventDefault()
+  }
+
+  /** 键盘弹出后把 composer 滚到可见区，等键盘动画走完再滚 */
+  function composerFocus() {
+    setTimeout(() => composerEl?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
+  }
 
   const allocated = $derived(items.reduce((s, it) => s + it.amountCents, 0))
   const totalCents = $derived(parseAmount(totalStr) ?? 0)
@@ -49,8 +61,10 @@
 
   function addItem() {
     if (!composerValid) return
+    // 这里才收键盘（iOS 点按钮不会自动让输入框失焦）
+    ;(document.activeElement as HTMLElement | null)?.blur()
     items.push({
-      id: crypto.randomUUID(),
+      id: uid(),
       label: cLabel.trim() || '明细',
       amountCents: cAmountCents!,
       kind: cKind,
@@ -98,7 +112,7 @@
         return
     }
     const bill: Bill = {
-      id: editing?.id ?? crypto.randomUUID(),
+      id: editing?.id ?? uid(),
       date,
       title: title.trim() || '未命名账单',
       totalCents,
@@ -185,12 +199,16 @@
       </div>
     {/each}
 
-    <div class="flex flex-col gap-2.5 rounded-[18px] border-[1.5px] border-accent bg-card p-3.5">
+    <div
+      class="flex flex-col gap-2.5 rounded-[18px] border-[1.5px] border-accent bg-card p-3.5"
+      bind:this={composerEl}
+    >
       <div class="flex items-center gap-2">
         <input
           class="min-w-0 flex-1 bg-transparent text-sm placeholder:text-sub"
           placeholder="名目（如 啤酒）"
           bind:value={cLabel}
+          onfocus={composerFocus}
         />
         <div class="flex items-baseline gap-0.5">
           <span class="num text-base font-bold text-sub">{sym()}</span>
@@ -199,6 +217,7 @@
             inputmode="decimal"
             placeholder="0.00"
             bind:value={cAmount}
+            onfocus={composerFocus}
           />
         </div>
       </div>
@@ -207,12 +226,14 @@
           class="rounded-full border-2 px-4 py-[7px] text-xs font-bold {cKind === 'shared'
             ? 'border-accent bg-accent text-white'
             : 'border-line bg-card2 text-sub'}"
+          onpointerdown={keepFocus}
           onclick={() => setKind('shared')}>共享 · 均摊</button
         >
         <button
           class="rounded-full border-2 px-4 py-[7px] text-xs font-bold {cKind === 'personal'
             ? 'border-accent bg-accent text-white'
             : 'border-line bg-card2 text-sub'}"
+          onpointerdown={keepFocus}
           onclick={() => setKind('personal')}>个人 · 归一人</button
         >
       </div>
@@ -223,6 +244,7 @@
             class="flex items-center gap-1.5 rounded-full border-2 py-1.5 pr-3 pl-1.5 text-xs font-bold {on
               ? 'border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]'
               : 'border-line bg-card text-sub'}"
+            onpointerdown={keepFocus}
             onclick={() => tapChip(m.id)}
           >
             <Avatar member={m} size={20} />{m.name}{on ? ' ✓' : ''}
