@@ -50,10 +50,13 @@
 <div class="relative flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
   <div class="flex items-start justify-between px-6 pt-3.5">
     <div class="min-w-0 flex-1 pr-3">
-      <button class="text-[15px] font-semibold text-accent" onclick={() => nav('')}>‹ 活动</button>
+      <button
+        class="-mx-2 -my-1.5 px-2 py-1.5 text-[17px] font-semibold text-accent"
+        onclick={() => nav('')}>‹ 活动</button
+      >
       {#if renaming}
         <input
-          class="mt-1 w-full bg-transparent text-2xl font-extrabold"
+          class="mt-2.5 w-full bg-transparent text-2xl font-extrabold"
           value={activity.name}
           use:focusSelect
           onblur={commitRename}
@@ -62,7 +65,7 @@
           }}
         />
       {:else}
-        <button class="mt-1 block text-2xl font-extrabold" onclick={() => (renaming = true)}>
+        <button class="mt-2.5 block text-2xl font-extrabold" onclick={() => (renaming = true)}>
           {activity.name}
         </button>
       {/if}
@@ -75,7 +78,7 @@
     </div>
     <button
       aria-label="更多操作"
-      class="flex h-9 w-9 items-center justify-center rounded-full bg-card2 text-[17px] text-sub"
+      class="-mt-[5px] flex h-9 w-9 items-center justify-center rounded-full bg-card2 text-[17px] text-sub"
       onclick={() => (menuOpen = !menuOpen)}>⋯</button
     >
   </div>
