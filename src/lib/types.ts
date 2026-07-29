@@ -38,6 +38,8 @@ export interface Activity {
   endDate: string
   members: Member[]
   bills: Bill[]
+  /** 管钱人（基金池保管者）的成员 id；旧数据无此字段 */
+  treasurerId?: string
   settled: boolean
   createdAt: number
 }

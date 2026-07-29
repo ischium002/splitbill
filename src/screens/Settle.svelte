@@ -3,6 +3,7 @@
   import { fmt, fmtPlain, sym } from '../lib/money'
   import { activityShares, activitySpent, fundTotal } from '../lib/calc'
   import { fmtRange } from '../lib/dates'
+  import { persist } from '../lib/store.svelte'
   import Avatar from '../lib/Avatar.svelte'
   import type { Activity } from '../lib/types'
 
@@ -23,6 +24,26 @@
   const refundSum = $derived(rows.reduce((s, r) => s + Math.max(0, r.bal), 0))
   const owedSum = $derived(rows.reduce((s, r) => s + Math.max(0, -r.bal), 0))
 
+  const treasurer = $derived(activity.members.find((m) => m.id === activity.treasurerId))
+  /** 基金模式下所有转账都经管钱人：负荷包补给 TA，正荷包从 TA 手里领 */
+  const transfers = $derived(
+    treasurer
+      ? rows
+          .filter((r) => r.m.id !== treasurer.id && r.bal !== 0)
+          .map((r) => ({
+            from: r.bal < 0 ? r.m : treasurer,
+            to: r.bal < 0 ? treasurer : r.m,
+            cents: Math.abs(r.bal),
+          }))
+      : []
+  )
+  const treasurerRow = $derived(treasurer ? rows.find((r) => r.m.id === treasurer.id) : undefined)
+
+  function setTreasurer(id: string) {
+    activity.treasurerId = activity.treasurerId === id ? undefined : id
+    persist(activity)
+  }
+
   async function share() {
     const lines = [
       `${activity.name} · 结算单`,
@@ -33,6 +54,12 @@
             r.bal < 0 ? '应补' : '应退'
           } ${fmt(Math.abs(r.bal))}`
       ),
+      ...(treasurer
+        ? [
+            `—— 转账建议（${treasurer.name} 管钱）——`,
+            ...transfers.map((t) => `${t.from.name} → ${t.to.name} ${fmt(t.cents)}`),
+          ]
+        : []),
       '— splitbill',
     ]
     const text = lines.join('\n')
@@ -59,6 +86,19 @@
   </div>
 
   <div class="flex-1 px-5 pt-2 pb-6">
+    <div class="mb-3 flex items-center gap-2 overflow-x-auto px-1">
+      <span class="flex-none text-xs text-sub">谁管钱</span>
+      {#each activity.members as m (m.id)}
+        <button
+          class="flex-none rounded-full px-3.5 py-1.5 text-[13px] font-semibold {activity.treasurerId ===
+          m.id
+            ? 'bg-accent text-white'
+            : 'bg-card2 text-ink'}"
+          onclick={() => setTreasurer(m.id)}>{m.name}</button
+        >
+      {/each}
+    </div>
+
     <div
       class="flex flex-col gap-3.5 rounded-3xl border border-line bg-card px-[22px] pt-[22px] pb-[18px] shadow-[0_6px_24px_rgba(45,32,14,.08)]"
     >
@@ -97,6 +137,31 @@
           </div>
         {/each}
       </div>
+
+      {#if treasurer}
+        <div class="border-t-2 border-dashed border-line"></div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="text-[11px] text-sub">转账建议 · {treasurer.name} 管钱</div>
+          {#if transfers.length === 0}
+            <div class="text-sm text-sub">两清，不需要转账 ✓</div>
+          {:else}
+            {#each transfers as t (t.from.id + t.to.id)}
+              <div class="flex items-center justify-between text-sm">
+                <span class="font-semibold">{t.from.name} → {t.to.name}</span>
+                <span class="num font-bold">{fmt(t.cents)}</span>
+              </div>
+            {/each}
+          {/if}
+          {#if treasurerRow && treasurerRow.bal !== 0}
+            <div class="text-[11px] text-sub">
+              {treasurer.name} 自己的{treasurerRow.bal < 0
+                ? `应补 ${fmt(-treasurerRow.bal)} 直接垫进池子`
+                : `应退 ${fmt(treasurerRow.bal)} 直接从池子剩余里留下`}，不用转账
+            </div>
+          {/if}
+        </div>
+      {/if}
 
       <div class="border-t-2 border-dashed border-line"></div>
 
