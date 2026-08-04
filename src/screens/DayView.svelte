@@ -21,7 +21,7 @@
   const shares = $derived(dayShares(activity, selDate))
 </script>
 
-<div class="flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
+<div class="flex flex-1 flex-col pt-[env(safe-area-inset-top)]">
   <div class="flex items-center justify-between px-6 py-2.5">
     <button class="text-[15px] font-semibold text-accent" onclick={() => nav(`a/${activity.id}`)}
       >‹ 返回</button

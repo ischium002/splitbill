@@ -24,6 +24,26 @@
   let cKind = $state<ItemKind>('shared')
   let cSel = $state<string[]>(activity.members.map((m) => m.id))
   let composerEl = $state<HTMLElement>()
+  let totalEl = $state<HTMLInputElement>()
+  let cLabelEl = $state<HTMLInputElement>()
+  let cAmountEl = $state<HTMLInputElement>()
+
+  /** 回车流转：标题→总额→明细名目→明细金额→添加并回到名目，连续录入 */
+  function enterTo(next: HTMLInputElement | undefined) {
+    return (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return
+      e.preventDefault()
+      next?.focus()
+    }
+  }
+
+  function amountEnter(e: KeyboardEvent) {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    if (!composerValid) return
+    addItem(true)
+    cLabelEl?.focus()
+  }
 
   /** 挂在按钮的 pointerdown 上：不抢输入框的焦点，键盘就不会收起（click 照常触发） */
   function keepFocus(e: PointerEvent) {
@@ -59,10 +79,10 @@
     }
   }
 
-  function addItem() {
+  function addItem(keepKeyboard = false) {
     if (!composerValid) return
-    // 这里才收键盘（iOS 点按钮不会自动让输入框失焦）
-    ;(document.activeElement as HTMLElement | null)?.blur()
+    // 这里才收键盘（iOS 点按钮不会自动让输入框失焦）；回车连续录入时不收
+    if (!keepKeyboard) (document.activeElement as HTMLElement | null)?.blur()
     items.push({
       id: uid(),
       label: cLabel.trim() || '明细',
@@ -100,9 +120,22 @@
   }
 
   function save() {
+    // composer 里填好但没点"添加"的内容，保存时顺手收进来
+    if (composerValid) addItem()
     if (items.length === 0) {
-      alert('还没有任何明细，先加一条吧')
-      return
+      if (totalCents > 0) {
+        // 快速记一笔：只填总额（如打车 10 块）→ 自动生成一条全员均摊
+        items.push({
+          id: uid(),
+          label: title.trim() || '合计',
+          amountCents: totalCents,
+          kind: 'shared',
+          memberIds: activity.members.map((m) => m.id),
+        })
+      } else {
+        alert('还没有任何明细。小额账单可以只填总额直接保存，会按全员均摊记一条')
+        return
+      }
     }
     if (totalCents > 0 && diff !== 0) {
       const word = diff > 0 ? '还差' : '超出'
@@ -138,7 +171,7 @@
   }
 </script>
 
-<div class="relative flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
+<div class="relative flex flex-1 flex-col pt-[env(safe-area-inset-top)]">
   <div class="flex items-center justify-between px-6 py-2.5">
     <button class="text-[15px] font-semibold text-accent" onclick={() => nav(`a/${activity.id}`)}
       >‹ {editing ? '返回' : '取消'}</button
@@ -164,9 +197,11 @@
       />
     </label>
     <input
-      class="min-w-0 flex-1 rounded-full bg-card2 px-3.5 py-2 text-[13px] font-semibold placeholder:text-sub"
+      class="min-w-0 flex-1 rounded-full bg-card2 px-3.5 py-1.5 text-base font-semibold placeholder:text-sub"
       placeholder="商家 / 名目，如 一兰拉面"
+      enterkeyhint="next"
       bind:value={title}
+      onkeydown={enterTo(totalEl)}
     />
   </div>
 
@@ -178,7 +213,10 @@
         class="num w-40 bg-transparent text-center text-[44px] font-bold tracking-[-0.5px] placeholder:text-sub"
         inputmode="decimal"
         placeholder="0.00"
+        enterkeyhint="next"
+        bind:this={totalEl}
         bind:value={totalStr}
+        onkeydown={enterTo(cLabelEl)}
       />
     </div>
   </div>
@@ -205,10 +243,13 @@
     >
       <div class="flex items-center gap-2">
         <input
-          class="min-w-0 flex-1 bg-transparent text-sm placeholder:text-sub"
+          class="min-w-0 flex-1 bg-transparent text-base placeholder:text-sub"
           placeholder="名目（如 啤酒）"
+          enterkeyhint="next"
+          bind:this={cLabelEl}
           bind:value={cLabel}
           onfocus={composerFocus}
+          onkeydown={enterTo(cAmountEl)}
         />
         <div class="flex items-baseline gap-0.5">
           <span class="num text-base font-bold text-sub">{sym()}</span>
@@ -216,8 +257,11 @@
             class="num w-20 bg-transparent text-right text-xl font-bold placeholder:text-sub"
             inputmode="decimal"
             placeholder="0.00"
+            enterkeyhint="done"
+            bind:this={cAmountEl}
             bind:value={cAmount}
             onfocus={composerFocus}
+            onkeydown={amountEnter}
           />
         </div>
       </div>
@@ -257,7 +301,7 @@
       <button
         class="flex h-11 items-center justify-center rounded-full bg-accent text-sm font-bold text-white disabled:opacity-40"
         disabled={!composerValid}
-        onclick={addItem}>＋ 添加明细</button
+        onclick={() => addItem()}>＋ 添加明细</button
       >
     </div>
   </div>
@@ -272,20 +316,24 @@
         ? 'bg-accent-soft'
         : 'bg-card2'}"
     >
-      <div class="num text-[13px]">
-        已录 {fmt(allocated)}{totalCents > 0 ? ` / 账单 ${fmt(totalCents)}` : ''}
-      </div>
-      {#if totalCents > 0}
-        <div class="num text-[13px] font-bold {diff === 0 ? 'text-pos' : 'text-accent'}">
-          {diff === 0 ? '正好对上 ✓' : diff > 0 ? `还差 ${fmt(diff)}` : `超出 ${fmt(-diff)}`}
+      {#if items.length === 0 && totalCents > 0 && !composerValid}
+        <div class="num text-[13px]">保存将按全员均摊记一条 {fmt(totalCents)}</div>
+      {:else}
+        <div class="num text-[13px]">
+          已录 {fmt(allocated)}{totalCents > 0 ? ` / 账单 ${fmt(totalCents)}` : ''}
         </div>
+        {#if totalCents > 0}
+          <div class="num text-[13px] font-bold {diff === 0 ? 'text-pos' : 'text-accent'}">
+            {diff === 0 ? '正好对上 ✓' : diff > 0 ? `还差 ${fmt(diff)}` : `超出 ${fmt(-diff)}`}
+          </div>
+        {/if}
       {/if}
     </div>
     <button
       class="flex h-14 items-center justify-center rounded-full bg-accent text-base font-bold text-white"
       onclick={save}>保存账单</button
     >
-    {#if totalCents > 0 && diff !== 0}
+    {#if totalCents > 0 && diff !== 0 && items.length > 0}
       <div class="text-center text-[11px] text-sub">有差值时保存会再确认一次</div>
     {/if}
   </div>

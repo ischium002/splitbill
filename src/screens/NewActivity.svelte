@@ -88,7 +88,7 @@
   }
 </script>
 
-<div class="relative flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
+<div class="relative flex flex-1 flex-col pt-[env(safe-area-inset-top)]">
   <div class="flex items-center justify-between px-6 py-2.5">
     <button class="text-[15px] font-semibold text-accent" onclick={prev}>
       {step === 1 ? '‹ 取消' : '‹ 上一步'}
@@ -110,20 +110,20 @@
     </div>
     <div class="flex flex-col gap-3 px-6 pt-4">
       <input
-        class="rounded-2xl border border-line bg-card px-4 py-3.5 text-[15px] font-semibold placeholder:text-sub"
+        class="rounded-2xl border border-line bg-card px-4 py-3.5 text-base font-semibold placeholder:text-sub"
         placeholder="活动名称，如 日本自由行"
         bind:value={name}
       />
       <div class="flex items-center gap-2">
         <input
           type="date"
-          class="min-w-0 flex-1 rounded-2xl border border-line bg-card px-4 py-3 text-sm"
+          class="min-w-0 flex-1 rounded-2xl border border-line bg-card px-4 py-3 text-base"
           bind:value={startDate}
         />
         <span class="text-sub">–</span>
         <input
           type="date"
-          class="min-w-0 flex-1 rounded-2xl border border-line bg-card px-4 py-3 text-sm"
+          class="min-w-0 flex-1 rounded-2xl border border-line bg-card px-4 py-3 text-base"
           bind:value={endDate}
         />
       </div>
@@ -135,7 +135,7 @@
     </div>
     <div class="flex gap-2 px-6 pt-4">
       <input
-        class="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-3 text-[15px] placeholder:text-sub"
+        class="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-3 text-base placeholder:text-sub"
         placeholder="名字，回车添加"
         bind:value={nameInput}
         onkeydown={(e) => e.key === 'Enter' && addName()}

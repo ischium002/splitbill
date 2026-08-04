@@ -4,6 +4,7 @@
   import { activityShares, activitySpent, fundTotal } from '../lib/calc'
   import { fmtRange } from '../lib/dates'
   import { persist } from '../lib/store.svelte'
+  import { encodeShare, shareUrl } from '../lib/share'
   import Avatar from '../lib/Avatar.svelte'
   import type { Activity } from '../lib/types'
 
@@ -62,21 +63,23 @@
         : []),
       '— splitbill',
     ]
+    // 只读快照链接：对方点开能看到完整明细，不用装 App
+    const url = shareUrl(await encodeShare($state.snapshot(activity) as Activity))
     const text = lines.join('\n')
     if (navigator.share) {
       try {
-        await navigator.share({ text })
+        await navigator.share({ text: `${text}\n明细点这里看 👇`, url })
         return
       } catch (err) {
         if ((err as DOMException).name === 'AbortError') return // 用户取消
       }
     }
-    await navigator.clipboard.writeText(text)
-    alert('结算单文字已复制，直接粘贴到群里')
+    await navigator.clipboard.writeText(`${text}\n明细点这里看 👇\n${url}`)
+    alert('结算单文字和只读链接已复制，直接粘贴到群里')
   }
 </script>
 
-<div class="flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
+<div class="flex flex-1 flex-col pt-[env(safe-area-inset-top)]">
   <div class="flex items-center justify-between px-6 py-2.5">
     <button class="text-[15px] font-semibold text-accent" onclick={() => nav(`a/${activity.id}`)}
       >‹ 返回</button

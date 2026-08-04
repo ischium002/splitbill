@@ -9,6 +9,7 @@
   import Settle from './screens/Settle.svelte'
   import MemberDetail from './screens/MemberDetail.svelte'
   import Settings from './screens/Settings.svelte'
+  import ShareView from './screens/ShareView.svelte'
 
   loadAll()
 
@@ -24,7 +25,9 @@
 </script>
 
 <div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col">
-  {#if !store.loaded}
+  {#if seg[0] === 'view' && seg[1]}
+    <ShareView payload={seg[1]} />
+  {:else if !store.loaded}
     <div class="flex flex-1 items-center justify-center text-sm text-sub">…</div>
   {:else if seg[0] === 'new'}
     <NewActivity />

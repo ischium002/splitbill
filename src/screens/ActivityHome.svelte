@@ -47,7 +47,7 @@
   }
 </script>
 
-<div class="relative flex flex-1 flex-col pt-[max(env(safe-area-inset-top),20px)]">
+<div class="relative flex flex-1 flex-col pt-[env(safe-area-inset-top)]">
   <div class="flex items-start justify-between px-6 pt-3.5">
     <div class="min-w-0 flex-1 pr-3">
       <button

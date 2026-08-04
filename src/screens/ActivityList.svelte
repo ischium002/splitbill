@@ -19,7 +19,7 @@
   }
 </script>
 
-<div class="flex flex-1 flex-col px-6 pt-[max(env(safe-area-inset-top),20px)] pb-8">
+<div class="flex flex-1 flex-col px-6 pt-[env(safe-area-inset-top)] pb-8">
   <div class="flex items-center justify-between py-3">
     <div class="text-[28px] font-extrabold">活动</div>
     <div class="flex items-center gap-2">
