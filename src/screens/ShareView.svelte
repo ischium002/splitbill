@@ -58,9 +58,12 @@
       const m = activity.members.find((mm) => mm.id === it.memberIds[0])
       return `个人 · ${m?.name ?? '?'}`
     }
-    return it.memberIds.length === activity.members.length
-      ? '均摊'
-      : `${it.memberIds.length} 人摊`
+    if (it.memberIds.length === activity.members.length) return '均摊'
+    // 部分人摊：直接列名字，谁摊的一目了然
+    const names = activity.members
+      .filter((m) => it.memberIds.includes(m.id))
+      .map((m) => m.name)
+    return `${names.join('+')} 摊`
   }
 </script>
 

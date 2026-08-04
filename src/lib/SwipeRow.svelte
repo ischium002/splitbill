@@ -82,8 +82,10 @@
 </script>
 
 <div class="relative">
+  <!-- 收起时彻底隐藏：半透明的卡片（如已结算 opacity 变灰）会把背后的红钮透出来 -->
   <button
-    class="absolute inset-y-0 right-0 flex w-[76px] items-center justify-center rounded-3xl bg-neg text-sm font-bold text-white"
+    class="absolute inset-y-0 right-0 flex w-[76px] items-center justify-center rounded-3xl bg-neg text-sm font-bold text-white transition-opacity duration-150"
+    style="opacity:{x === 0 ? 0 : 1};pointer-events:{x === 0 ? 'none' : 'auto'}"
     tabindex={open ? 0 : -1}
     onclick={onDelete}>删除</button
   >

@@ -82,7 +82,7 @@
         </button>
       {:else}
         <button
-          class="flex w-full flex-col gap-3 rounded-3xl border border-line bg-card p-5 opacity-70"
+          class="flex w-full flex-col gap-3 rounded-3xl border border-line bg-card p-5 *:opacity-70"
           onclick={() => nav('a/' + a.id)}
         >
           <div class="flex items-start justify-between self-stretch">
