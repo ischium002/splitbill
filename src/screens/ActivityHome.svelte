@@ -126,6 +126,16 @@
     <div class="mt-3 h-1.5 overflow-hidden rounded-[3px] bg-card2">
       <div class="h-full rounded-[3px] bg-accent" style="width:{pct}%"></div>
     </div>
+    <button
+      class="mt-4 flex w-full items-center justify-between rounded-2xl bg-card2 px-4 py-3 text-left"
+      onclick={() => nav(`a/${activity.id}/members`)}
+    >
+      <div>
+        <div class="text-[15px] font-bold">成员与经费</div>
+        <div class="mt-0.5 text-xs text-sub">添加成员或追加活动经费</div>
+      </div>
+      <div class="text-lg text-sub">›</div>
+    </button>
   </div>
 
   {#if activity.bills.length === 0}

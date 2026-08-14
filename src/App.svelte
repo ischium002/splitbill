@@ -8,6 +8,7 @@
   import DayView from './screens/DayView.svelte'
   import Settle from './screens/Settle.svelte'
   import MemberDetail from './screens/MemberDetail.svelte'
+  import ActivityMembers from './screens/ActivityMembers.svelte'
   import Settings from './screens/Settings.svelte'
   import ShareView from './screens/ShareView.svelte'
 
@@ -42,6 +43,8 @@
       <Settle {activity} />
     {:else if seg[2] === 'm'}
       <MemberDetail {activity} memberId={seg[3] ?? ''} />
+    {:else if seg[2] === 'members'}
+      <ActivityMembers {activity} />
     {:else}
       <ActivityHome {activity} />
     {/if}
