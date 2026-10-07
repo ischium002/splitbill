@@ -4,6 +4,12 @@
  */
 import type { Activity, Bill, BillItem } from './types'
 import { uid } from './id'
+import { sym } from './money'
+
+export interface ShareSnapshot extends Activity {
+  /** 分享时的货币符号；旧链接未保存此字段 */
+  currencySymbol?: string
+}
 
 /** 紧凑格式：成员用下标引用，去掉 UUID，键名压到一个字母 */
 interface PackedItem {
@@ -21,6 +27,8 @@ interface PackedBill {
 }
 interface Packed {
   v: 1
+  /** 分享时的货币符号（兼容未保存符号的旧链接） */
+  c?: string
   n: string
   s: string
   e: string
@@ -36,6 +44,7 @@ function pack(a: Activity): Packed {
   const tIdx = a.treasurerId !== undefined ? idx.get(a.treasurerId) : undefined
   return {
     v: 1,
+    c: sym(),
     n: a.name,
     s: a.startDate,
     e: a.endDate,
@@ -57,10 +66,13 @@ function pack(a: Activity): Packed {
   }
 }
 
-function unpack(p: Packed): Activity {
+function unpack(p: Packed): ShareSnapshot {
   const memberIds = p.m.map(() => uid())
   return {
     id: uid(),
+    currencySymbol: typeof p.c === 'string' && ['$', '¥', '€', '£'].includes(p.c)
+      ? p.c
+      : undefined,
     name: p.n,
     startDate: p.s,
     endDate: p.e,
@@ -126,7 +138,7 @@ export async function encodeShare(a: Activity): Promise<string> {
   return '0' + toB64url(json)
 }
 
-export async function decodeShare(payload: string): Promise<Activity | null> {
+export async function decodeShare(payload: string): Promise<ShareSnapshot | null> {
   try {
     const bytes = fromB64url(payload.slice(1))
     const json =

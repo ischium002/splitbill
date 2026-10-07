@@ -20,8 +20,8 @@ export function sym(): string {
 }
 
 /** $1,234.56（负数带 −） */
-export function fmt(cents: number): string {
-  return (cents < 0 ? '−' : '') + sym() + group(cents)
+export function fmt(cents: number, symbol = sym()): string {
+  return (cents < 0 ? '−' : '') + symbol + group(cents)
 }
 
 /** +$12.30 / −$4.50，荷包余额用 */

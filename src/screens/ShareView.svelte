@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { decodeShare } from '../lib/share'
-  import { fmt, fmtPlain, sym } from '../lib/money'
+  import { decodeShare, type ShareSnapshot } from '../lib/share'
+  import { fmt as formatMoney, fmtPlain, sym } from '../lib/money'
   import { fmtDay, fmtRange } from '../lib/dates'
   import { activityShares, activitySpent, fundTotal, billAllocated } from '../lib/calc'
   import Avatar from '../lib/Avatar.svelte'
@@ -8,8 +8,14 @@
 
   let { payload }: { payload: string } = $props()
 
-  let activity = $state<Activity | null>(null)
+  let activity = $state<ShareSnapshot | null>(null)
   let failed = $state(false)
+
+  const snapshotSymbol = $derived(activity?.currencySymbol ?? sym())
+
+  function fmt(cents: number): string {
+    return formatMoney(cents, snapshotSymbol)
+  }
 
   $effect(() => {
     decodeShare(payload).then((a) => {
@@ -110,7 +116,7 @@
                   {r.bal < 0 ? '应补' : '应退'}
                 </div>
                 <div class="num text-lg font-bold {r.bal < 0 ? 'text-neg' : 'text-pos'}">
-                  {sym()}{fmtPlain(r.bal)}
+                  {snapshotSymbol}{fmtPlain(r.bal)}
                 </div>
               </div>
             </div>
